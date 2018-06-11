@@ -47,35 +47,30 @@ public class RemoteHttpConnection {
         params = new HashMap<>();
         this.path = path;
 
-        for (int x = 0; x < payload.length; x++) {
-            String[] payloadSegment = payload[x].split(";");
-            for (int k = 0; k < payloadSegment.length; k++) {
-                params.put(payloadSegment[k].split(":")[0], payloadSegment[k].split(":")[1]);
+        for (String singlePayload : payload) {
+            String[] payloadSegment = singlePayload.split(";");
+            for (String singleSegment : payloadSegment) {
+                params.put(singleSegment.split(":")[0], singleSegment.split(":")[1]);
             }
         }
     }
 
     public String post() throws MalformedURLException, IOException {
         if (!getParams().equalsIgnoreCase("") && !getParams().isEmpty()) {
-            String key = "";
-            String val = "";
-            for (Map.Entry<String, String> param : params.entrySet()) {
-                key = param.getKey();
-                val = param.getValue();
-                this.data = this.data.concat(String.format("&%s=%s", key, val));
-            }
+            this.buildURL();
             if (data.startsWith("&")) {
                 data = data.replaceFirst("&", "");
             }
             url = new URL(path);
-            BufferedReader reader = new BufferedReader(new InputStreamReader(postConnection(data, url)));
-            StringBuffer incoming = new StringBuffer();
-            link.getResponseCode();
-            String line;
-            while ((line = reader.readLine()) != null) {
-                incoming.append(line.concat("\n"));
+            StringBuffer incoming;
+            try (BufferedReader reader = new BufferedReader(new InputStreamReader(postConnection(data, url)))) {
+                incoming = new StringBuffer();
+                link.getResponseCode();
+                String line;
+                while ((line = reader.readLine()) != null) {
+                    incoming.append(line.concat("\n"));
+                }
             }
-            reader.close();
             return incoming.toString();
         } else {
             return null;
@@ -83,32 +78,43 @@ public class RemoteHttpConnection {
 
     }
 
-    public String get() throws MalformedURLException, IOException {
-        if (!path.endsWith("/")) {
-            path = path.concat("/?");
-        } else {
-            path = path.concat("?");
-        }
+    private void buildURL(){
         String key = "";
         String val = "";
         for (Map.Entry<String, String> param : params.entrySet()) {
             key = param.getKey();
             val = param.getValue();
-            data = data.concat(String.format("%s=%s&", key, val));
+            switch(method){
+                case "GET":
+                    this.data = this.data.concat(String.format("%s=%s&", key, val));
+                    break;
+                default:
+                    this.data = this.data.concat(String.format("&%s=%s", key, val));
+                    break;
+            }
         }
+    }
+    public String get() throws MalformedURLException, IOException {
+        method = "GET";
+        if (!path.endsWith("/")) {
+            path = path.concat("/?");
+        } else {
+            path = path.concat("?");
+        }
+        this.buildURL();
         data = data.substring(0, data.length() - 1);
         url = new URL(path.concat(data));
         link = (HttpURLConnection) url.openConnection();
-        link.setRequestMethod("GET");
+        link.setRequestMethod(method);
         int responseCode = link.getResponseCode();
         StringBuffer response = new StringBuffer();
         String inputLine;
-        if (responseCode == link.HTTP_OK) {
-            BufferedReader reader = new BufferedReader(new InputStreamReader(link.getInputStream()));
-            while ((inputLine = reader.readLine()) != null) {
-                response.append(inputLine.concat("\n"));
+        if (responseCode == HttpURLConnection.HTTP_OK) {
+            try (BufferedReader reader = new BufferedReader(new InputStreamReader(link.getInputStream()))) {
+                while ((inputLine = reader.readLine()) != null) {
+                    response.append(inputLine.concat("\n"));
+                }
             }
-            reader.close();
             return response.toString();
         } else {
             return null;
@@ -124,6 +130,11 @@ public class RemoteHttpConnection {
 
         return this.data;
     }
+    
+    public String getMethod() {
+
+        return this.method;
+    }
 
     public void setUserAgent(String agent) {
         this.userAgent = agent;
@@ -131,22 +142,6 @@ public class RemoteHttpConnection {
 
     public void setMethod(String method) {
         this.method = method;
-    }
-
-    public static void main(String... args) {
-       
-        try {
-            String [] payload =
-            {
-                "username:amolosteve;",
-                "password:banter",
-                
-            };
-            String url = "https://calebamolo10.000webhostapp.com/test/login.php";
-            System.out.println(new RemoteHttpConnection(payload,url).post());
-        } catch (IOException ex) {
-            System.err.println(ex);
-        }
     }
 
     private InputStream postConnection(String data, URL url) throws IOException {
@@ -162,4 +157,26 @@ public class RemoteHttpConnection {
         return link.getInputStream();
     }
 
+    public static void main(String... args) throws InterruptedException {
+       
+        try {
+            String [] payload =
+            {
+                "username:amolosteve;",
+                "password:banter",
+                
+            };
+            String url = "https://calebamolo10.000webhostapp.com/test/login.php";
+            RemoteHttpConnection obj = new RemoteHttpConnection(payload,url);
+            //obj.setMethod("GET");
+            
+            
+            
+            System.out.println(obj.get());
+            System.out.println(obj.method);
+            //System.out.println(obj.link.toString().split(":", 2)[1]);
+        } catch (IOException ex) {
+            System.err.println(ex);
+        }
+    }
 }
