@@ -50,7 +50,7 @@ public final class LocalDatabaseConnection {
                 if (link == null) {
                     try {
                         Class.forName("com.mysql.jdbc.Driver");
-                        link = DriverManager.getConnection("jdbc:mysql://145.14.144.199/id689362_titan", "id689362_root", "banter");
+                        link = DriverManager.getConnection("jdbc:mysql://127.0.0.1/artemis", "root", "banter");
                     } catch (Exception ex) {
                         Logger.getLogger(LocalDatabaseConnection.class.getName()).log(Level.SEVERE, null, ex);
                     }

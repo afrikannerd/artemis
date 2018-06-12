@@ -32,7 +32,7 @@ public class Auth {
 
     private static Connection link = LocalDatabaseConnection.getInstance();
 
-    public static ResultSet login(String username, String password) throws SQLException {
+    public static ResultSet login(String username) throws SQLException {
         String sql = "Select * from users where username=?";
         PreparedStatement st = link.prepareStatement(sql);
         st.setString(1, username);

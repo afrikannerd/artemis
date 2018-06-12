@@ -10,18 +10,15 @@ package com.github.afrikannerd.views;
  * @author afrikannerd <afrikannerd@gmail.com>
  */
 import com.github.afrikannerd.core.Auth;
-import com.github.afrikannerd.core.connection.LocalDatabaseConnection;
-import java.awt.Color;
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
-import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.Base64;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import javax.swing.JOptionPane;
+
 
 public class Login extends javax.swing.JFrame {
 
@@ -249,7 +246,7 @@ public class Login extends javax.swing.JFrame {
         lblError.setText("");
 
         try {
-            ResultSet rs = Auth.login(username, pass);
+            ResultSet rs = Auth.login(username);
             if (!rs.isBeforeFirst()) {
                 lblError.setText("Wrong username or password");
             } else {
